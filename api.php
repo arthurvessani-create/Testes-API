@@ -12,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 const MAX_BASES_UPLOAD = 5;
 const MAX_UPLOAD_BYTES = 2097152; // 2 MB
+const ANO_MINIMO_INICIO = 1900;
 
 // Mantém o projeto funcional mesmo sem a extensão mbstring e em versões
 // do PHP anteriores à introdução de array_is_list().
@@ -25,6 +26,12 @@ function textoMinusculo($valor)
 {
     $valor = (string) $valor;
     return function_exists('mb_strtolower') ? mb_strtolower($valor, 'UTF-8') : strtolower($valor);
+}
+
+// Substitui str_contains() para funcionar também em PHP anterior ao 8.0.
+function textoContem($texto, $busca)
+{
+    return $busca === '' || strpos($texto, $busca) !== false;
 }
 
 function ehLista($dados)
@@ -43,7 +50,7 @@ function ehLista($dados)
     return true;
 }
 
-$arquivoPadrao = __DIR__ . '/dados.json';
+$arquivoPadrao = __DIR__ . '/baseadinhos.json';
 $diretorioBases = __DIR__ . '/bases';
 
 if (!is_dir($diretorioBases) && !mkdir($diretorioBases, 0775, true) && !is_dir($diretorioBases)) {
@@ -81,9 +88,9 @@ function listarBases($diretorioBases)
 {
     $bases = [
         [
-            'id' => 'dados.json',
+            'id' => 'baseadinhos.json',
             'nome' => 'Base padrão',
-            'arquivo' => 'dados.json',
+            'arquivo' => 'baseadinhos.json',
             'padrao' => true
         ]
     ];
@@ -106,7 +113,7 @@ function listarBases($diretorioBases)
 
 function caminhoBaseSelecionada($base, $arquivoPadrao, $diretorioBases)
 {
-    if ($base === null || $base === '' || $base === 'dados.json') {
+    if ($base === null || $base === '' || $base === 'baseadinhos.json') {
         return $arquivoPadrao;
     }
 
@@ -125,7 +132,7 @@ function caminhoBaseSelecionada($base, $arquivoPadrao, $diretorioBases)
     return $caminho;
 }
 
-function carregarUsuarios($arquivo)
+function carregarArtistas($arquivo)
 {
     if (!file_exists($arquivo)) {
         file_put_contents($arquivo, '[]');
@@ -141,9 +148,9 @@ function carregarUsuarios($arquivo)
     return $dados;
 }
 
-function salvarUsuarios($arquivo, $usuarios)
+function salvarArtistas($arquivo, $artistas)
 {
-    $json = json_encode(array_values($usuarios), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    $json = json_encode(array_values($artistas), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
     if ($json === false) {
         erro('Não foi possível converter os dados para JSON.', 500);
@@ -168,41 +175,53 @@ function lerJson()
     return $dados ?? [];
 }
 
-function validarUsuario($dados, $parcial = false)
+// Valida um campo de texto obrigatório com limites de tamanho.
+function validarTexto($dados, $campo, $rotulo, $min, $max, &$erros)
+{
+    $valor = $dados[$campo] ?? '';
+
+    if (!is_scalar($valor)) {
+        $erros[$campo] = "$rotulo deve ser um texto.";
+        return;
+    }
+
+    $valor = trim((string) $valor);
+
+    if ($valor === '') {
+        $erros[$campo] = "$rotulo é obrigatório.";
+    } elseif (textoTamanho($valor) < $min) {
+        $erros[$campo] = "$rotulo deve ter pelo menos $min caracteres.";
+    } elseif (textoTamanho($valor) > $max) {
+        $erros[$campo] = "$rotulo deve ter no máximo $max caracteres.";
+    }
+}
+
+function validarArtista($dados, $parcial = false)
 {
     $erros = [];
 
     if (!$parcial || array_key_exists('nome', $dados)) {
-        $nome = trim((string) ($dados['nome'] ?? ''));
-
-        if ($nome === '') {
-            $erros['nome'] = 'O nome é obrigatório.';
-        } elseif (textoTamanho($nome) < 3) {
-            $erros['nome'] = 'O nome deve ter pelo menos 3 caracteres.';
-        } elseif (textoTamanho($nome) > 100) {
-            $erros['nome'] = 'O nome deve ter no máximo 100 caracteres.';
-        }
+        validarTexto($dados, 'nome', 'O nome', 3, 100, $erros);
     }
 
-    if (!$parcial || array_key_exists('email', $dados)) {
-        $email = trim((string) ($dados['email'] ?? ''));
-
-        if ($email === '') {
-            $erros['email'] = 'O e-mail é obrigatório.';
-        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $erros['email'] = 'Informe um e-mail válido.';
-        }
+    if (!$parcial || array_key_exists('nome_artistico', $dados)) {
+        validarTexto($dados, 'nome_artistico', 'O nome artístico', 1, 100, $erros);
     }
 
-    if (!$parcial || array_key_exists('idade', $dados)) {
-        $idade = $dados['idade'] ?? null;
+    if (!$parcial || array_key_exists('album_mais_famoso', $dados)) {
+        validarTexto($dados, 'album_mais_famoso', 'O álbum mais famoso', 1, 150, $erros);
+    }
 
-        if ($idade === null || $idade === '') {
-            $erros['idade'] = 'A idade é obrigatória.';
-        } elseif (filter_var($idade, FILTER_VALIDATE_INT) === false) {
-            $erros['idade'] = 'A idade deve ser um número inteiro.';
-        } elseif ((int) $idade < 0 || (int) $idade > 120) {
-            $erros['idade'] = 'A idade deve estar entre 0 e 120.';
+    if (!$parcial || array_key_exists('ano_de_inicio', $dados)) {
+        $ano = $dados['ano_de_inicio'] ?? null;
+        $anoAtual = (int) date('Y');
+
+        if ($ano === null || $ano === '') {
+            $erros['ano_de_inicio'] = 'O ano de início é obrigatório.';
+        } elseif (filter_var($ano, FILTER_VALIDATE_INT) === false) {
+            $erros['ano_de_inicio'] = 'O ano de início deve ser um número inteiro.';
+        } elseif ((int) $ano < ANO_MINIMO_INICIO || (int) $ano > $anoAtual) {
+            $erros['ano_de_inicio'] = 'O ano de início deve estar entre ' . ANO_MINIMO_INICIO . " e $anoAtual.";
         }
     }
 
@@ -212,41 +231,32 @@ function validarUsuario($dados, $parcial = false)
 function validarBaseImportada($dados)
 {
     if (!is_array($dados) || !ehLista($dados)) {
-        return ['base' => 'O JSON deve ter um array de usuários na raiz.'];
+        return ['base' => 'O JSON deve ter um array de artistas na raiz.'];
     }
 
     $erros = [];
     $ids = [];
-    $emails = [];
 
-    foreach ($dados as $indice => $usuario) {
-        if (!is_array($usuario)) {
+    foreach ($dados as $indice => $artista) {
+        if (!is_array($artista)) {
             $erros["registro_$indice"] = 'Cada item da base deve ser um objeto JSON.';
             continue;
         }
 
-        if (!array_key_exists('id', $usuario) || filter_var($usuario['id'], FILTER_VALIDATE_INT) === false || (int) $usuario['id'] < 1) {
+        if (!array_key_exists('id', $artista) || filter_var($artista['id'], FILTER_VALIDATE_INT) === false || (int) $artista['id'] < 1) {
             $erros["registro_$indice.id"] = 'O ID deve ser um inteiro positivo.';
         } else {
-            $id = (int) $usuario['id'];
+            $id = (int) $artista['id'];
             if (isset($ids[$id])) {
                 $erros["registro_$indice.id"] = 'O ID está duplicado na base.';
             }
             $ids[$id] = true;
         }
 
-        $validacao = validarUsuario($usuario);
+        $validacao = validarArtista($artista);
 
         foreach ($validacao as $campo => $mensagem) {
             $erros["registro_$indice.$campo"] = $mensagem;
-        }
-
-        if (isset($usuario['email']) && filter_var($usuario['email'], FILTER_VALIDATE_EMAIL)) {
-            $email = strtolower(trim($usuario['email']));
-            if (isset($emails[$email])) {
-                $erros["registro_$indice.email"] = 'O e-mail está duplicado na base.';
-            }
-            $emails[$email] = true;
         }
 
         if (count($erros) >= 20) {
@@ -260,29 +270,29 @@ function validarBaseImportada($dados)
 
 function normalizarBaseImportada($dados)
 {
-    return array_map(function ($usuario) {
+    return array_map(function ($artista) {
         return [
-            'id' => (int) $usuario['id'],
-            'nome' => trim($usuario['nome']),
-            'email' => trim($usuario['email']),
-            'idade' => (int) $usuario['idade']
+            'id' => (int) $artista['id'],
+            'nome' => trim($artista['nome']),
+            'nome_artistico' => trim($artista['nome_artistico']),
+            'album_mais_famoso' => trim($artista['album_mais_famoso']),
+            'ano_de_inicio' => (int) $artista['ano_de_inicio']
         ];
     }, $dados);
 }
 
-function emailEmUso($usuarios, $email, $ignorarId = null)
+// Filtra por texto (busca parcial, sem diferenciar maiúsculas/minúsculas).
+function filtrarPorTexto($lista, $campo)
 {
-    foreach ($usuarios as $usuario) {
-        if (
-            isset($usuario['email'], $usuario['id']) &&
-            strtolower($usuario['email']) === strtolower($email) &&
-            ($ignorarId === null || (int) $usuario['id'] !== $ignorarId)
-        ) {
-            return true;
-        }
+    if (!isset($_GET[$campo]) || trim($_GET[$campo]) === '') {
+        return $lista;
     }
 
-    return false;
+    $busca = textoMinusculo(trim($_GET[$campo]));
+
+    return array_filter($lista, function ($artista) use ($campo, $busca) {
+        return isset($artista[$campo]) && textoContem(textoMinusculo($artista[$campo]), $busca);
+    });
 }
 
 $metodo = $_SERVER['REQUEST_METHOD'];
@@ -370,7 +380,7 @@ if ($action === 'upload-base') {
     $erros = validarBaseImportada($dados);
 
     if ($erros) {
-        erro('A base JSON não é compatível com o formato esperado.', 422, $erros);
+        erro('A base JSON não é compatível com o formato esperado (id, nome, nome_artistico, album_mais_famoso, ano_de_inicio).', 422, $erros);
     }
 
     $dadosNormalizados = normalizarBaseImportada($dados);
@@ -406,7 +416,7 @@ if ($action === 'delete-base') {
 
     $base = $_GET['base'] ?? '';
 
-    if ($base === '' || $base === 'dados.json') {
+    if ($base === '' || $base === 'baseadinhos.json') {
         erro('A base padrão não pode ser removida.', 400);
     }
 
@@ -429,66 +439,56 @@ if ($action === 'delete-base') {
     responder(['message' => 'Base removida com sucesso.']);
 }
 
-$baseSelecionada = $_GET['base'] ?? 'dados.json';
+$baseSelecionada = $_GET['base'] ?? 'baseadinhos.json';
 $arquivo = caminhoBaseSelecionada($baseSelecionada, $arquivoPadrao, $diretorioBases);
-$usuarios = carregarUsuarios($arquivo);
+$artistas = carregarArtistas($arquivo);
 $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 
 if ($metodo === 'GET') {
     if ($id !== null) {
-        foreach ($usuarios as $usuario) {
-            if ((int) $usuario['id'] === $id) {
+        foreach ($artistas as $artista) {
+            if ((int) $artista['id'] === $id) {
                 responder([
                     'base' => $baseSelecionada,
-                    'dados' => $usuario
+                    'dados' => $artista
                 ]);
             }
         }
 
-        erro('Usuário não encontrado', 404);
+        erro('Artista não encontrado', 404);
     }
 
-    $resultado = $usuarios;
+    $resultado = $artistas;
 
-    if (isset($_GET['nome']) && trim($_GET['nome']) !== '') {
-        $nome = textoMinusculo(trim($_GET['nome']));
+    $resultado = filtrarPorTexto($resultado, 'nome');
+    $resultado = filtrarPorTexto($resultado, 'nome_artistico');
+    $resultado = filtrarPorTexto($resultado, 'album_mais_famoso');
 
-        $resultado = array_filter($resultado, function ($usuario) use ($nome) {
-            return isset($usuario['nome']) && str_contains(textoMinusculo($usuario['nome']), $nome);
-        });
-    }
-
-    if (isset($_GET['email']) && trim($_GET['email']) !== '') {
-        $email = textoMinusculo(trim($_GET['email']));
-
-        $resultado = array_filter($resultado, function ($usuario) use ($email) {
-            return isset($usuario['email']) && str_contains(textoMinusculo($usuario['email']), $email);
-        });
-    }
-
-    if (isset($_GET['idade']) && $_GET['idade'] !== '') {
-        if (filter_var($_GET['idade'], FILTER_VALIDATE_INT) === false) {
-            erroValidacao(['idade' => 'O filtro de idade deve ser um número inteiro.']);
+    if (isset($_GET['ano_de_inicio']) && $_GET['ano_de_inicio'] !== '') {
+        if (filter_var($_GET['ano_de_inicio'], FILTER_VALIDATE_INT) === false) {
+            erroValidacao(['ano_de_inicio' => 'O filtro de ano de início deve ser um número inteiro.']);
         }
 
-        $idade = (int) $_GET['idade'];
+        $ano = (int) $_GET['ano_de_inicio'];
 
-        $resultado = array_filter($resultado, function ($usuario) use ($idade) {
-            return isset($usuario['idade']) && (int) $usuario['idade'] === $idade;
+        $resultado = array_filter($resultado, function ($artista) use ($ano) {
+            return isset($artista['ano_de_inicio']) && (int) $artista['ano_de_inicio'] === $ano;
         });
     }
 
-    $camposOrdenacao = ['id', 'nome', 'email', 'idade'];
+    $camposOrdenacao = ['id', 'nome', 'nome_artistico', 'album_mais_famoso', 'ano_de_inicio'];
     $sort = $_GET['sort'] ?? 'id';
     $order = strtolower($_GET['order'] ?? 'asc');
 
     if (!in_array($sort, $camposOrdenacao, true)) {
-        erroValidacao(['sort' => 'Campo de ordenação inválido. Use id, nome, email ou idade.']);
+        erroValidacao(['sort' => 'Campo de ordenação inválido. Use id, nome, nome_artistico, album_mais_famoso ou ano_de_inicio.']);
     }
 
     if (!in_array($order, ['asc', 'desc'], true)) {
         erroValidacao(['order' => 'Direção inválida. Use asc ou desc.']);
     }
+
+    $resultado = array_values($resultado);
 
     usort($resultado, function ($a, $b) use ($sort, $order) {
         $valorA = $a[$sort] ?? null;
@@ -508,49 +508,45 @@ if ($metodo === 'GET') {
         'total' => count($resultado),
         'filtros' => [
             'nome' => $_GET['nome'] ?? null,
-            'email' => $_GET['email'] ?? null,
-            'idade' => isset($_GET['idade']) && $_GET['idade'] !== '' ? (int) $_GET['idade'] : null
+            'nome_artistico' => $_GET['nome_artistico'] ?? null,
+            'album_mais_famoso' => $_GET['album_mais_famoso'] ?? null,
+            'ano_de_inicio' => isset($_GET['ano_de_inicio']) && $_GET['ano_de_inicio'] !== '' ? (int) $_GET['ano_de_inicio'] : null
         ],
         'ordenacao' => [
             'campo' => $sort,
             'direcao' => $order
         ],
-        'dados' => array_values($resultado)
+        'dados' => $resultado
     ]);
 }
 
 if ($metodo === 'POST') {
     $dados = lerJson();
-    $erros = validarUsuario($dados);
+    $erros = validarArtista($dados);
 
     if ($erros) {
         erroValidacao($erros);
     }
 
-    $email = trim($dados['email']);
-
-    if (emailEmUso($usuarios, $email)) {
-        erroValidacao(['email' => 'Este e-mail já está cadastrado.']);
-    }
-
-    $ids = array_map(function ($usuario) {
-        return (int) ($usuario['id'] ?? 0);
-    }, $usuarios);
+    $ids = array_map(function ($artista) {
+        return (int) ($artista['id'] ?? 0);
+    }, $artistas);
     $novoId = count($ids) > 0 ? max($ids) + 1 : 1;
 
-    $novoUsuario = [
+    $novoArtista = [
         'id' => $novoId,
         'nome' => trim($dados['nome']),
-        'email' => $email,
-        'idade' => (int) $dados['idade']
+        'nome_artistico' => trim($dados['nome_artistico']),
+        'album_mais_famoso' => trim($dados['album_mais_famoso']),
+        'ano_de_inicio' => (int) $dados['ano_de_inicio']
     ];
 
-    $usuarios[] = $novoUsuario;
-    salvarUsuarios($arquivo, $usuarios);
+    $artistas[] = $novoArtista;
+    salvarArtistas($arquivo, $artistas);
 
     responder([
         'base' => $baseSelecionada,
-        'dados' => $novoUsuario
+        'dados' => $novoArtista
     ], 201);
 }
 
@@ -560,37 +556,32 @@ if ($metodo === 'PUT') {
     }
 
     $dados = lerJson();
-    $erros = validarUsuario($dados);
+    $erros = validarArtista($dados);
 
     if ($erros) {
         erroValidacao($erros);
     }
 
-    $email = trim($dados['email']);
-
-    if (emailEmUso($usuarios, $email, $id)) {
-        erroValidacao(['email' => 'Este e-mail já está cadastrado.']);
-    }
-
-    foreach ($usuarios as $indice => $usuario) {
-        if ((int) $usuario['id'] === $id) {
-            $usuarios[$indice] = [
+    foreach ($artistas as $indice => $artista) {
+        if ((int) $artista['id'] === $id) {
+            $artistas[$indice] = [
                 'id' => $id,
                 'nome' => trim($dados['nome']),
-                'email' => $email,
-                'idade' => (int) $dados['idade']
+                'nome_artistico' => trim($dados['nome_artistico']),
+                'album_mais_famoso' => trim($dados['album_mais_famoso']),
+                'ano_de_inicio' => (int) $dados['ano_de_inicio']
             ];
 
-            salvarUsuarios($arquivo, $usuarios);
+            salvarArtistas($arquivo, $artistas);
 
             responder([
                 'base' => $baseSelecionada,
-                'dados' => $usuarios[$indice]
+                'dados' => $artistas[$indice]
             ]);
         }
     }
 
-    erro('Usuário não encontrado', 404);
+    erro('Artista não encontrado', 404);
 }
 
 if ($metodo === 'PATCH') {
@@ -604,43 +595,34 @@ if ($metodo === 'PATCH') {
         erroValidacao(['body' => 'Envie ao menos um campo para atualizar.']);
     }
 
-    $erros = validarUsuario($dados, true);
+    $erros = validarArtista($dados, true);
 
     if ($erros) {
         erroValidacao($erros);
     }
 
-    if (
-        array_key_exists('email', $dados) &&
-        emailEmUso($usuarios, trim($dados['email']), $id)
-    ) {
-        erroValidacao(['email' => 'Este e-mail já está cadastrado.']);
-    }
-
-    foreach ($usuarios as $indice => $usuario) {
-        if ((int) $usuario['id'] === $id) {
-            if (array_key_exists('nome', $dados)) {
-                $usuarios[$indice]['nome'] = trim($dados['nome']);
+    foreach ($artistas as $indice => $artista) {
+        if ((int) $artista['id'] === $id) {
+            foreach (['nome', 'nome_artistico', 'album_mais_famoso'] as $campo) {
+                if (array_key_exists($campo, $dados)) {
+                    $artistas[$indice][$campo] = trim($dados[$campo]);
+                }
             }
 
-            if (array_key_exists('email', $dados)) {
-                $usuarios[$indice]['email'] = trim($dados['email']);
+            if (array_key_exists('ano_de_inicio', $dados)) {
+                $artistas[$indice]['ano_de_inicio'] = (int) $dados['ano_de_inicio'];
             }
 
-            if (array_key_exists('idade', $dados)) {
-                $usuarios[$indice]['idade'] = (int) $dados['idade'];
-            }
-
-            salvarUsuarios($arquivo, $usuarios);
+            salvarArtistas($arquivo, $artistas);
 
             responder([
                 'base' => $baseSelecionada,
-                'dados' => $usuarios[$indice]
+                'dados' => $artistas[$indice]
             ]);
         }
     }
 
-    erro('Usuário não encontrado', 404);
+    erro('Artista não encontrado', 404);
 }
 
 if ($metodo === 'DELETE') {
@@ -648,21 +630,21 @@ if ($metodo === 'DELETE') {
         erro('Informe o ID', 400);
     }
 
-    foreach ($usuarios as $indice => $usuario) {
-        if ((int) $usuario['id'] === $id) {
-            $usuarioExcluido = $usuario;
-            array_splice($usuarios, $indice, 1);
-            salvarUsuarios($arquivo, $usuarios);
+    foreach ($artistas as $indice => $artista) {
+        if ((int) $artista['id'] === $id) {
+            $artistaExcluido = $artista;
+            array_splice($artistas, $indice, 1);
+            salvarArtistas($arquivo, $artistas);
 
             responder([
                 'base' => $baseSelecionada,
-                'message' => 'Usuário excluído',
-                'dados' => $usuarioExcluido
+                'message' => 'Artista excluído',
+                'dados' => $artistaExcluido
             ]);
         }
     }
 
-    erro('Usuário não encontrado', 404);
+    erro('Artista não encontrado', 404);
 }
 
 erro('Método não permitido', 405);

@@ -1,0 +1,107 @@
+[
+    {
+      "id": 1,
+      "nome_artistico": "Kanye West",
+      "nome_real": "Kanye Omari West",
+      "album_mais_famoso": "My Beautiful Dark Twisted Fantasy",
+      "ano_inicio": 1996
+    },
+    {
+      "id": 2,
+      "nome_artistico": "A$AP Rocky",
+      "nome_real": "Rakim Mayers",
+      "album_mais_famoso": "LONG.LIVE.A$AP",
+      "ano_inicio": 2007
+    },
+    {
+      "id": 3,
+      "nome_artistico": "Playboi Carti",
+      "nome_real": "Jordan Carter",
+      "album_mais_famoso": "Whole Lotta Red",
+      "ano_inicio": 2011
+    },
+    {
+      "id": 4,
+      "nome_artistico": "Tyler, The Creator",
+      "nome_real": "Tyler Okonma",
+      "album_mais_famoso": "IGOR",
+      "ano_inicio": 2007
+    },
+    {
+      "id": 5,
+      "nome_artistico": "Frank Ocean",
+      "nome_real": "Christopher Breaux",
+      "album_mais_famoso": "Blonde",
+      "ano_inicio": 2005
+    },
+    {
+      "id": 6,
+      "nome_artistico": "Travis Scott",
+      "nome_real": "Jacques Webster II",
+      "album_mais_famoso": "ASTROWORLD",
+      "ano_inicio": 2008
+    },
+    {
+      "id": 7,
+      "nome_artistico": "Kendrick Lamar",
+      "nome_real": "Kendrick Duckworth",
+      "album_mais_famoso": "To Pimp a Butterfly",
+      "ano_inicio": 2004
+    },
+    {
+      "id": 8,
+      "nome_artistico": "Drake",
+      "nome_real": "Aubrey Graham",
+      "album_mais_famoso": "Views",
+      "ano_inicio": 2006
+    },
+    {
+      "id": 9,
+      "nome_artistico": "Kid Cudi",
+      "nome_real": "Scott Mescudi",
+      "album_mais_famoso": "Man on the Moon: The End of Day",
+      "ano_inicio": 2003
+    },
+    {
+      "id": 10,
+      "nome_artistico": "Lil Uzi Vert",
+      "nome_real": "Symere Woods",
+      "album_mais_famoso": "Luv Is Rage 2",
+      "ano_inicio": 2012
+    },
+    {
+      "id": 11,
+      "nome_artistico": "Pharrell Williams",
+      "nome_real": "Pharrell Williams",
+      "album_mais_famoso": "In My Mind",
+      "ano_inicio": 1990
+    },
+    {
+      "id": 12,
+      "nome_artistico": "The Weeknd",
+      "nome_real": "Abel Tesfaye",
+      "album_mais_famoso": "After Hours",
+      "ano_inicio": 2009
+    },
+    {
+      "id": 13,
+      "nome_artistico": "Mac Miller",
+      "nome_real": "Malcolm McCormick",
+      "album_mais_famoso": "Swimming",
+      "ano_inicio": 2007
+    },
+    {
+      "id": 14,
+      "nome_artistico": "21 Savage",
+      "nome_real": "Shéyaa Abraham-Joseph",
+      "album_mais_famoso": "i am > i was",
+      "ano_inicio": 2013
+    },
+    {
+      "id": 15,
+      "nome_artistico": "Don Toliver",
+      "nome_real": "Caleb Zackery Toliver",
+      "album_mais_famoso": "Heaven or Hell",
+      "ano_inicio": 2017
+    }
+  ]
