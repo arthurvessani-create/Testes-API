@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GameVault • sua coleção de jogos</title>
+<style>
+  :root {
+    --bg: #07060f;
+    --card: rgba(255,255,255,.045);
+    --border: rgba(255,255,255,.09);
+    --text: #f1f0ff;
+    --muted: #8f8cb0;
+    --pink: #ff3d9a;
+    --cyan: #19e3ff;
+    --lime: #b6ff3b;
+    --amber: #ffc53d;
+    --red: #ff5c6c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--text); padding-bottom: 70px;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background:
+      radial-gradient(700px 400px at 0% 0%, rgba(255,61,154,.22), transparent 60%),
+      radial-gradient(700px 450px at 100% 10%, rgba(25,227,255,.16), transparent 60%),
+      var(--bg);
+    background-attachment: fixed;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 18px; }
+
+  header { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+  h1 { margin: 0; font-size: 2rem; letter-spacing: -.03em; font-weight: 800; }
+  h1 .g { background: linear-gradient(90deg, var(--pink), var(--cyan)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { color: var(--muted); font-size: .88rem; margin-top: 2px; }
+
+  button { font: inherit; border: 0; cursor: pointer; border-radius: 12px; padding: 10px 16px; color: #fff; transition: transform .15s, filter .2s, background .2s; }
+  button:active { transform: scale(.96); }
+  .btn-main { background: linear-gradient(135deg, var(--pink), #8a5bff); font-weight: 700; box-shadow: 0 8px 26px rgba(255,61,154,.35); }
+  .btn-main:hover { filter: brightness(1.12); }
+  .btn-ghost { background: rgba(255,255,255,.08); }
+  .btn-ghost:hover { background: rgba(255,255,255,.15); }
+  .btn-danger { background: rgba(255,92,108,.16); color: var(--red); }
+  .btn-danger:hover { background: rgba(255,92,108,.3); }
+
+  input, select, textarea {
+    font: inherit; color: var(--text); background: rgba(255,255,255,.06); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 12px; outline: none; transition: border-color .2s, box-shadow .2s; width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(25,227,255,.2); }
+  select option { background: #15122b; }
+  ::placeholder { color: #6a6790; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; }
+  .stat .n { font-size: 1.7rem; font-weight: 800; }
+  .stat .l { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .stat:nth-child(1) .n { color: var(--cyan); }
+  .stat:nth-child(2) .n { color: var(--lime); }
+  .stat:nth-child(3) .n { color: var(--amber); }
+  .stat:nth-child(4) .n { color: var(--pink); }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px; }
+  .toolbar .search { flex: 1; min-width: 200px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { background: rgba(255,255,255,.06); border: 1px solid var(--border); padding: 7px 14px; border-radius: 999px; font-size: .85rem; color: var(--muted); }
+  .chip.on { background: rgba(25,227,255,.15); border-color: var(--cyan); color: var(--cyan); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .game {
+    background: var(--card); border: 1px solid var(--border); border-radius: 18px; overflow: hidden;
+    transition: transform .2s, box-shadow .2s, border-color .2s; animation: pop .3s ease;
+  }
+  .game:hover { transform: translateY(-4px); box-shadow: 0 16px 34px rgba(0,0,0,.45); border-color: rgba(255,255,255,.22); }
+  @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: none; } }
+  .cover { height: 120px; position: relative; display: grid; place-items: center; font-size: 3rem; }
+  .cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(7,6,15,.75), transparent 60%); }
+  .fav { position: absolute; top: 10px; right: 10px; z-index: 2; background: rgba(0,0,0,.4); padding: 6px 9px; border-radius: 10px; font-size: 1rem; line-height: 1; }
+  .fav:hover { background: rgba(0,0,0,.65); }
+  .body { padding: 14px 16px 16px; }
+  .body h3 { margin: 0 0 4px; font-size: 1.1rem; word-break: break-word; }
+  .meta { color: var(--muted); font-size: .82rem; margin-bottom: 10px; }
+  .stars { display: flex; gap: 2px; margin-bottom: 12px; }
+  .star { background: none; padding: 0 1px; font-size: 1.25rem; color: #3a3760; }
+  .star.on { color: var(--amber); }
+  .star:hover { transform: scale(1.25); }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .status { font-size: .72rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; }
+  .status.quero { background: rgba(25,227,255,.15); color: var(--cyan); }
+  .status.jogando { background: rgba(255,197,61,.15); color: var(--amber); }
+  .status.zerado { background: rgba(182,255,59,.15); color: var(--lime); }
+  .acts { display: flex; gap: 5px; }
+  .acts button { padding: 6px 10px; font-size: .8rem; background: rgba(255,255,255,.08); }
+  .acts button:hover { background: rgba(255,255,255,.18); }
+
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); background: var(--card); border: 1px dashed var(--border); border-radius: 18px; }
+  .empty .big { font-size: 3rem; margin-bottom: 8px; }
+
+  /* Modal */
+  .bg { position: fixed; inset: 0; background: rgba(4,3,10,.75); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
+  .bg.open { display: flex; }
+  .modal { width: 100%; max-width: 480px; max-height: 92vh; overflow: auto; background: #110e24; border: 1px solid var(--border); border-radius: 22px; padding: 22px; animation: pop .2s ease; }
+  .modal h2 { margin: 0 0 14px; }
+  .f { margin-bottom: 12px; display: flex; flex-direction: column; gap: 5px; }
+  .f label { font-size: .78rem; color: var(--muted); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .actions { display: flex; gap: 8px; justify-content: space-between; margin-top: 6px; }
+  .actions .r { display: flex; gap: 8px; margin-left: auto; }
+  .idbox { font-family: ui-monospace, Menlo, monospace; font-size: .75rem; color: var(--muted); word-break: break-all; margin-bottom: 12px; }
+
+  /* Log */
+  .log { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: rgba(7,6,15,.96); border-top: 1px solid var(--border); backdrop-filter: blur(10px); }
+  .log-bar { display: flex; justify-content: space-between; padding: 10px 18px; cursor: pointer; font-size: .85rem; color: var(--muted); }
+  .log-bar b { color: var(--text); }
+  .log-body { display: none; max-height: 220px; overflow: auto; padding: 0 18px 12px; font-family: ui-monospace, Menlo, monospace; font-size: .78rem; }
+  .log.open .log-body { display: block; }
+  .ln { display: flex; gap: 10px; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+  .m { min-width: 64px; text-align: center; font-weight: 700; border-radius: 6px; padding: 1px 8px; }
+  .m.GET { background: rgba(25,227,255,.18); color: var(--cyan); }
+  .m.POST { background: rgba(182,255,59,.18); color: var(--lime); }
+  .m.PUT { background: rgba(255,197,61,.18); color: var(--amber); }
+  .m.PATCH { background: rgba(255,61,154,.18); color: var(--pink); }
+  .m.DELETE { background: rgba(255,92,108,.18); color: var(--red); }
+  .ok { color: var(--lime); } .bad { color: var(--red); }
+  .url { flex: 1; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  #toasts { position: fixed; right: 16px; bottom: 62px; display: flex; flex-direction: column; gap: 8px; z-index: 60; }
+  .toast { background: #1a1634; border: 1px solid var(--border); border-left: 4px solid var(--cyan); padding: 10px 14px; border-radius: 10px; font-size: .88rem; animation: pop .2s ease; max-width: 320px; }
+  .toast.ok { border-left-color: var(--lime); } .toast.err { border-left-color: var(--red); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Game<span class="g">Vault</span> 🎮</h1>
+      <div class="sub">Sua coleção de jogos, salva online pela API restful-api.dev</div>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap">
+      <button class="btn-ghost" id="btnImportar">🔗 Importar por ID</button>
+      <button class="btn-ghost" id="btnRecarregar">↻ Recarregar</button>
+      <button class="btn-main" id="btnNovo">+ Adicionar jogo</button>
+    </div>
+  </header>
+
+  <section class="stats">
+    <div class="stat"><div class="n" id="sTotal">0</div><div class="l">Jogos</div></div>
+    <div class="stat"><div class="n" id="sZerados">0</div><div class="l">Zerados</div></div>
+    <div class="stat"><div class="n" id="sMedia">–</div><div class="l">Nota média</div></div>
+    <div class="stat"><div class="n" id="sFavs">0</div><div class="l">Favoritos</div></div>
+  </section>
+
+  <div class="toolbar">
+    <input class="search" id="busca" placeholder="🔎 Buscar por nome, gênero ou plataforma...">
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- Modal criar/editar -->
+<div class="bg" id="bgForm">
+  <div class="modal">
+    <h2 id="mTitulo">Adicionar jogo</h2>
+    <form id="form">
+      <input type="hidden" id="fId">
+      <div class="idbox" id="fIdBox" hidden></div>
+      <div class="f"><label>Nome do jogo</label><input id="fNome" required maxlength="60" placeholder="Ex: Hollow Knight"></div>
+      <div class="two">
+        <div class="f"><label>Gênero</label>
+          <select id="fGenero">
+            <option>Ação</option><option>Aventura</option><option>RPG</option><option>Corrida</option>
+            <option>Esporte</option><option>Terror</option><option>Estratégia</option><option>Indie</option><option>Puzzle</option>
+          </select>
+        </div>
+        <div class="f"><label>Plataforma</label>
+          <select id="fPlat"><option>PC</option><option>PlayStation</option><option>Xbox</option><option>Switch</option><option>Mobile</option></select>
+        </div>
+      </div>
+      <div class="two">
+        <div class="f"><label>Ano de lançamento</label><input id="fAno" type="number" min="1970" max="2100" placeholder="2024"></div>
+        <div class="f"><label>Status</label>
+          <select id="fStatus"><option value="quero">Quero jogar</option><option value="jogando">Jogando</option><option value="zerado">Zerado</option></select>
+        </div>
+      </div>
+      <div class="f"><label>Nota (0 a 5)</label><input id="fNota" type="number" min="0" max="5" step="1" value="0"></div>
+      <div class="actions">
+        <button type="button" class="btn-danger" id="btnExcluir" hidden>Excluir</button>
+        <div class="r">
+          <button type="button" class="btn-ghost" id="btnCancelar">Cancelar</button>
+          <button type="submit" class="btn-main" id="btnSalvar">Salvar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal importar -->
+<div class="bg" id="bgImp">
+  <div class="modal">
+    <h2>Importar por ID</h2>
+    <p style="color:var(--muted); font-size:.88rem; margin-top:0">Cole o ID de um jogo salvo (por exemplo, enviado por um amigo ou de outro navegador).</p>
+    <div class="f"><input id="impId" placeholder="ID do objeto"></div>
+    <div class="actions"><div class="r">
+      <button class="btn-ghost" id="impCancelar">Cancelar</button>
+      <button class="btn-main" id="impOk">Importar</button>
+    </div></div>
+  </div>
+</div>
+
+<div class="log" id="log">
+  <div class="log-bar" id="logBar"><span>📡 Requisições HTTP — <b id="logN">0</b> feitas</span><span id="logSeta">▲ abrir</span></div>
+  <div class="log-body" id="logBody"></div>
+</div>
+<div id="toasts"></div>
+
+<script>
+const API = "https://api.restful-api.dev/objects";
+const $ = (id) => document.getElementById(id);
+const EMOJI = { "Ação":"⚔️","Aventura":"🧭","RPG":"🐉","Corrida":"🏎️","Esporte":"⚽","Terror":"👻","Estratégia":"♟️","Indie":"✨","Puzzle":"🧩" };
+const STATUS_NOME = { quero: "Quero jogar", jogando: "Jogando", zerado: "Zerado" };
+
+let ids = [];
+try { ids = JSON.parse(localStorage.getItem("gv_ids") || "[]"); } catch (e) {}
+const salvarIds = () => { try { localStorage.setItem("gv_ids", JSON.stringify(ids)); } catch (e) {} };
+
+let jogos = [];
+let filtro = "todos";
+let nReqs = 0;
+
+/* ===== Camada HTTP ===== */
+async function http(metodo, url, corpo) {
+  const t0 = performance.now();
+  let status = "ERR";
+  try {
+    const resp = await fetch(url, {
+      method: metodo,
+      headers: corpo ? { "Content-Type": "application/json" } : undefined,
+      body: corpo ? JSON.stringify(corpo) : undefined,
+    });
+    status = resp.status;
+    if (!resp.ok) {
+      let detalhe = "";
+      try { detalhe = (await resp.json()).error || ""; } catch (e) {}
+      throw new Error(`Erro ${resp.status} (${metodo}). ${detalhe}`.trim());
+    }
+    const txt = await resp.text();
+    return txt ? JSON.parse(txt) : null;
+  } finally {
+    log(metodo, url, status, Math.round(performance.now() - t0));
+  }
+}
+
+const apiListar  = (lista) => http("GET", `${API}?${lista.map((i) => "id=" + encodeURIComponent(i)).join("&")}`); // GET (vários por id)
+const apiBuscar  = (id)    => http("GET", `${API}/${id}`);                      // GET por id
+const apiCriar   = (obj)   => http("POST", API, obj);                           // POST
+const apiPut     = (id, o) => http("PUT", `${API}/${id}`, o);                   // PUT (substitui tudo)
+const apiPatch   = (id, o) => http("PATCH", `${API}/${id}`, o);                 // PATCH (parcial)
+const apiExcluir = (id)    => http("DELETE", `${API}/${id}`);                   // DELETE
+
+/* ===== Log / toast ===== */
+function log(metodo, url, status, ms) {
+  nReqs++; $("logN").textContent = nReqs;
+  const ok = typeof status === "number" && status < 400;
+  const l = document.createElement("div");
+  l.className = "ln";
+  l.innerHTML = `<span class="m ${metodo}">${metodo}</span><span class="${ok ? "ok" : "bad"}">${status}</span><span class="url"></span><span style="color:var(--muted)">${ms}ms</span>`;
+  l.querySelector(".url").textContent = url.replace("https://api.restful-api.dev", "");
+  $("logBody").prepend(l);
+}
+function toast(msg, tipo = "") {
+  const t = document.createElement("div");
+  t.className = "toast " + tipo; t.textContent = msg;
+  $("toasts").appendChild(t); setTimeout(() => t.remove(), 3400);
+}
+$("logBar").onclick = () => {
+  const aberto = $("log").classList.toggle("open");
+  $("logSeta").textContent = aberto ? "▼ fechar" : "▲ abrir";
+};
+
+/* ===== Helpers visuais ===== */
+function hue(str) { let h = 0; for (const c of str) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
+function capaCSS(nome) {
+  const h = hue(nome);
+  return `linear-gradient(135deg, hsl(${h} 80% 45%), hsl(${(h + 70) % 360} 85% 35%))`;
+}
+
+/* ===== Render ===== */
+function visiveis() {
+  const termo = $("busca").value.trim().toLowerCase();
+  return jogos
+    .filter((j) => (filtro === "todos" || j.data.status === filtro || (filtro === "fav" && j.data.favorito)))
+    .filter((j) => !termo || `${j.name} ${j.data.genero} ${j.data.plataforma}`.toLowerCase().includes(termo))
+    .sort((a, b) => (b.data.favorito ? 1 : 0) - (a.data.favorito ? 1 : 0) || a.name.localeCompare(b.name));
+}
+
+function renderChips() {
+  const defs = [["todos", "Todos"], ["quero", "Quero jogar"], ["jogando", "Jogando"], ["zerado", "Zerados"], ["fav", "★ Favoritos"]];
+  $("chips").innerHTML = "";
+  defs.forEach(([id, nome]) => {
+    const b = document.createElement("button");
+    b.className = "chip" + (filtro === id ? " on" : "");
+    b.textContent = nome;
+    b.onclick = () => { filtro = id; renderChips(); render(); };
+    $("chips").appendChild(b);
+  });
+}
+
+function render() {
+  const grid = $("grid");
+  grid.innerHTML = "";
+  const lista = visiveis();
+
+  if (!lista.length) {
+    const e = document.createElement("div");
+    e.className = "empty"; e.style.gridColumn = "1 / -1";
+    e.innerHTML = `<div class="big">🕹️</div><div>${jogos.length ? "Nenhum jogo com esse filtro." : "Sua coleção está vazia. Adicione seu primeiro jogo!"}</div>`;
+    grid.appendChild(e);
+  }
+  lista.forEach((j) => grid.appendChild(cardJogo(j)));
+
+  const total = jogos.length;
+  const notas = jogos.map((j) => Number(j.data.nota) || 0).filter((n
