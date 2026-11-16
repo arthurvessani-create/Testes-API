@@ -36,6 +36,7 @@
 
   button { font: inherit; border: 0; cursor: pointer; border-radius: 12px; padding: 10px 16px; color: #fff; transition: transform .15s, filter .2s, background .2s; }
   button:active { transform: scale(.96); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
   .btn-main { background: linear-gradient(135deg, var(--pink), #8a5bff); font-weight: 700; box-shadow: 0 8px 26px rgba(255,61,154,.35); }
   .btn-main:hover { filter: brightness(1.12); }
   .btn-ghost { background: rgba(255,255,255,.08); }
@@ -50,6 +51,16 @@
   input:focus, select:focus, textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(25,227,255,.2); }
   select option { background: #15122b; }
   ::placeholder { color: #6a6790; }
+
+  /* Endpoint CrudCrud */
+  .setup { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; margin-bottom: 20px; }
+  .setup label { display: block; font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+  .setup-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .setup-row input { flex: 1; min-width: 220px; font-family: ui-monospace, Menlo, monospace; font-size: .85rem; }
+  .hint { color: var(--muted); font-size: .8rem; margin-top: 8px; }
+  .hint a { color: var(--cyan); }
+  .conn { font-size: .8rem; margin-top: 8px; }
+  .conn.ok { color: var(--lime); } .conn.bad { color: var(--red); }
 
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
   .stat { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; }
@@ -119,7 +130,6 @@
   .m.GET { background: rgba(25,227,255,.18); color: var(--cyan); }
   .m.POST { background: rgba(182,255,59,.18); color: var(--lime); }
   .m.PUT { background: rgba(255,197,61,.18); color: var(--amber); }
-  .m.PATCH { background: rgba(255,61,154,.18); color: var(--pink); }
   .m.DELETE { background: rgba(255,92,108,.18); color: var(--red); }
   .ok { color: var(--lime); } .bad { color: var(--red); }
   .url { flex: 1; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -134,14 +144,23 @@
   <header>
     <div>
       <h1>Game<span class="g">Vault</span> 🎮</h1>
-      <div class="sub">Sua coleção de jogos, salva online pela API restful-api.dev</div>
+      <div class="sub">Sua coleção de jogos, salva online pela API CrudCrud</div>
     </div>
     <div style="display:flex; gap:8px; flex-wrap:wrap">
-      <button class="btn-ghost" id="btnImportar">🔗 Importar por ID</button>
       <button class="btn-ghost" id="btnRecarregar">↻ Recarregar</button>
       <button class="btn-main" id="btnNovo">+ Adicionar jogo</button>
     </div>
   </header>
+
+  <section class="setup">
+    <label for="epInput">Endpoint do CrudCrud</label>
+    <div class="setup-row">
+      <input id="epInput" placeholder="https://crudcrud.com/api/seu-endpoint" autocomplete="off" spellcheck="false">
+      <button class="btn-main" id="epSalvar">Conectar</button>
+    </div>
+    <div class="hint">Gere o seu em <a href="https://crudcrud.com" target="_blank" rel="noopener">crudcrud.com</a> e cole a URL aqui. Cada endpoint dura 24 horas e aceita 100 requisições.</div>
+    <div class="conn" id="conn"></div>
+  </section>
 
   <section class="stats">
     <div class="stat"><div class="n" id="sTotal">0</div><div class="l">Jogos</div></div>
@@ -165,25 +184,25 @@
     <form id="form">
       <input type="hidden" id="fId">
       <div class="idbox" id="fIdBox" hidden></div>
-      <div class="f"><label>Nome do jogo</label><input id="fNome" required maxlength="60" placeholder="Ex: Hollow Knight"></div>
+      <div class="f"><label for="fNome">Nome do jogo</label><input id="fNome" required maxlength="60" placeholder="Ex: Hollow Knight"></div>
       <div class="two">
-        <div class="f"><label>Gênero</label>
+        <div class="f"><label for="fGenero">Gênero</label>
           <select id="fGenero">
             <option>Ação</option><option>Aventura</option><option>RPG</option><option>Corrida</option>
             <option>Esporte</option><option>Terror</option><option>Estratégia</option><option>Indie</option><option>Puzzle</option>
           </select>
         </div>
-        <div class="f"><label>Plataforma</label>
+        <div class="f"><label for="fPlat">Plataforma</label>
           <select id="fPlat"><option>PC</option><option>PlayStation</option><option>Xbox</option><option>Switch</option><option>Mobile</option></select>
         </div>
       </div>
       <div class="two">
-        <div class="f"><label>Ano de lançamento</label><input id="fAno" type="number" min="1970" max="2100" placeholder="2024"></div>
-        <div class="f"><label>Status</label>
+        <div class="f"><label for="fAno">Ano de lançamento</label><input id="fAno" type="number" min="1970" max="2100" placeholder="2024"></div>
+        <div class="f"><label for="fStatus">Status</label>
           <select id="fStatus"><option value="quero">Quero jogar</option><option value="jogando">Jogando</option><option value="zerado">Zerado</option></select>
         </div>
       </div>
-      <div class="f"><label>Nota (0 a 5)</label><input id="fNota" type="number" min="0" max="5" step="1" value="0"></div>
+      <div class="f"><label for="fNota">Nota (0 a 5)</label><input id="fNota" type="number" min="0" max="5" step="1" value="0"></div>
       <div class="actions">
         <button type="button" class="btn-danger" id="btnExcluir" hidden>Excluir</button>
         <div class="r">
@@ -195,19 +214,6 @@
   </div>
 </div>
 
-<!-- Modal importar -->
-<div class="bg" id="bgImp">
-  <div class="modal">
-    <h2>Importar por ID</h2>
-    <p style="color:var(--muted); font-size:.88rem; margin-top:0">Cole o ID de um jogo salvo (por exemplo, enviado por um amigo ou de outro navegador).</p>
-    <div class="f"><input id="impId" placeholder="ID do objeto"></div>
-    <div class="actions"><div class="r">
-      <button class="btn-ghost" id="impCancelar">Cancelar</button>
-      <button class="btn-main" id="impOk">Importar</button>
-    </div></div>
-  </div>
-</div>
-
 <div class="log" id="log">
   <div class="log-bar" id="logBar"><span>📡 Requisições HTTP — <b id="logN">0</b> feitas</span><span id="logSeta">▲ abrir</span></div>
   <div class="log-body" id="logBody"></div>
@@ -215,18 +221,26 @@
 <div id="toasts"></div>
 
 <script>
-const API = "https://api.restful-api.dev/objects";
+/* Se quiser, cole aqui o ID do seu endpoint (os 32 caracteres depois de /api/).
+   Também dá para colar a URL inteira no campo da página. */
+const ENDPOINT_PADRAO = "";
+
+const RECURSO = "jogos";
 const $ = (id) => document.getElementById(id);
 const EMOJI = { "Ação":"⚔️","Aventura":"🧭","RPG":"🐉","Corrida":"🏎️","Esporte":"⚽","Terror":"👻","Estratégia":"♟️","Indie":"✨","Puzzle":"🧩" };
 const STATUS_NOME = { quero: "Quero jogar", jogando: "Jogando", zerado: "Zerado" };
 
-let ids = [];
-try { ids = JSON.parse(localStorage.getItem("gv_ids") || "[]"); } catch (e) {}
-const salvarIds = () => { try { localStorage.setItem("gv_ids", JSON.stringify(ids)); } catch (e) {} };
+let endpoint = ENDPOINT_PADRAO;
+try { endpoint = localStorage.getItem("gv_crud_endpoint") || ENDPOINT_PADRAO; } catch (e) {}
+const salvarEndpoint = () => { try { localStorage.setItem("gv_crud_endpoint", endpoint); } catch (e) {} };
 
 let jogos = [];
 let filtro = "todos";
 let nReqs = 0;
+let carregando = false;
+
+const RAIZ = () => `https://crudcrud.com/api/${endpoint}`;
+const BASE = () => `${RAIZ()}/${RECURSO}`;
 
 /* ===== Camada HTTP ===== */
 async function http(metodo, url, corpo) {
@@ -240,23 +254,28 @@ async function http(metodo, url, corpo) {
     });
     status = resp.status;
     if (!resp.ok) {
-      let detalhe = "";
-      try { detalhe = (await resp.json()).error || ""; } catch (e) {}
-      throw new Error(`Erro ${resp.status} (${metodo}). ${detalhe}`.trim());
+      if (resp.status === 404) throw new Error("Endpoint não encontrado ou expirado. Gere outro em crudcrud.com.");
+      if (resp.status === 429) throw new Error("Limite de requisições do CrudCrud atingido. Gere outro endpoint.");
+      throw new Error(`Erro ${resp.status} (${metodo})`);
     }
     const txt = await resp.text();
     return txt ? JSON.parse(txt) : null;
+  } catch (e) {
+    if (e instanceof TypeError) throw new Error("Não foi possível falar com o CrudCrud. Confira a internet e o endpoint.");
+    throw e;
   } finally {
     log(metodo, url, status, Math.round(performance.now() - t0));
   }
 }
 
-const apiListar  = (lista) => http("GET", `${API}?${lista.map((i) => "id=" + encodeURIComponent(i)).join("&")}`); // GET (vários por id)
-const apiBuscar  = (id)    => http("GET", `${API}/${id}`);                      // GET por id
-const apiCriar   = (obj)   => http("POST", API, obj);                           // POST
-const apiPut     = (id, o) => http("PUT", `${API}/${id}`, o);                   // PUT (substitui tudo)
-const apiPatch   = (id, o) => http("PATCH", `${API}/${id}`, o);                 // PATCH (parcial)
-const apiExcluir = (id)    => http("DELETE", `${API}/${id}`);                   // DELETE
+// O CrudCrud usa _id e não aceita _id no corpo do PUT.
+const apiListar  = ()      => http("GET", BASE());                        // GET (lista todos)
+const apiCriar   = (obj)   => http("POST", BASE(), obj);                  // POST (devolve o objeto com _id)
+const apiPut     = (id, o) => http("PUT", `${BASE()}/${id}`, o);          // PUT (substitui o objeto)
+const apiExcluir = (id)    => http("DELETE", `${BASE()}/${id}`);          // DELETE
+
+const paraCorpo = (j) => ({ name: j.name, data: j.data });
+const doServidor = (o) => ({ id: o._id, name: o.name || "Sem nome", data: o.data || {} });
 
 /* ===== Log / toast ===== */
 function log(metodo, url, status, ms) {
@@ -265,7 +284,7 @@ function log(metodo, url, status, ms) {
   const l = document.createElement("div");
   l.className = "ln";
   l.innerHTML = `<span class="m ${metodo}">${metodo}</span><span class="${ok ? "ok" : "bad"}">${status}</span><span class="url"></span><span style="color:var(--muted)">${ms}ms</span>`;
-  l.querySelector(".url").textContent = url.replace("https://api.restful-api.dev", "");
+  l.querySelector(".url").textContent = url.replace(RAIZ(), "");
   $("logBody").prepend(l);
 }
 function toast(msg, tipo = "") {
@@ -277,6 +296,7 @@ $("logBar").onclick = () => {
   const aberto = $("log").classList.toggle("open");
   $("logSeta").textContent = aberto ? "▼ fechar" : "▲ abrir";
 };
+function status(msg, tipo) { const c = $("conn"); c.textContent = msg; c.className = "conn " + (tipo || ""); }
 
 /* ===== Helpers visuais ===== */
 function hue(str) { let h = 0; for (const c of str) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
@@ -306,6 +326,13 @@ function renderChips() {
   });
 }
 
+function textoVazio() {
+  if (!endpoint) return "Cole o endpoint do CrudCrud no campo acima para começar.";
+  if (carregando) return "Carregando sua coleção…";
+  if (jogos.length) return "Nenhum jogo com esse filtro.";
+  return "Sua coleção está vazia. Adicione seu primeiro jogo!";
+}
+
 function render() {
   const grid = $("grid");
   grid.innerHTML = "";
@@ -314,10 +341,188 @@ function render() {
   if (!lista.length) {
     const e = document.createElement("div");
     e.className = "empty"; e.style.gridColumn = "1 / -1";
-    e.innerHTML = `<div class="big">🕹️</div><div>${jogos.length ? "Nenhum jogo com esse filtro." : "Sua coleção está vazia. Adicione seu primeiro jogo!"}</div>`;
+    e.innerHTML = `<div class="big">🕹️</div><div></div>`;
+    e.lastChild.textContent = textoVazio();
     grid.appendChild(e);
   }
   lista.forEach((j) => grid.appendChild(cardJogo(j)));
 
-  const total = jogos.length;
-  const notas = jogos.map((j) => Number(j.data.nota) || 0).filter((n
+  const notas = jogos.map((j) => Number(j.data.nota) || 0).filter((n) => n > 0);
+  $("sTotal").textContent = jogos.length;
+  $("sZerados").textContent = jogos.filter((j) => j.data.status === "zerado").length;
+  $("sMedia").textContent = notas.length ? (notas.reduce((a, b) => a + b, 0) / notas.length).toFixed(1) : "–";
+  $("sFavs").textContent = jogos.filter((j) => j.data.favorito).length;
+}
+
+function cardJogo(j) {
+  const d = j.data;
+  const el = document.createElement("article");
+  el.className = "game";
+
+  const capa = document.createElement("div");
+  capa.className = "cover"; capa.style.background = capaCSS(j.name);
+  capa.textContent = EMOJI[d.genero] || "🎮";
+  const fav = document.createElement("button");
+  fav.className = "fav"; fav.textContent = d.favorito ? "❤️" : "🤍"; fav.title = "Favoritar (PUT)";
+  fav.onclick = () => alternarFav(j);
+  capa.appendChild(fav);
+
+  const corpo = document.createElement("div");
+  corpo.className = "body";
+  const h = document.createElement("h3"); h.textContent = j.name;
+  const meta = document.createElement("div"); meta.className = "meta";
+  meta.textContent = [d.genero, d.plataforma, d.ano].filter(Boolean).join(" • ");
+
+  const stars = document.createElement("div"); stars.className = "stars";
+  for (let i = 1; i <= 5; i++) {
+    const s = document.createElement("button");
+    s.className = "star" + (i <= (Number(d.nota) || 0) ? " on" : "");
+    s.textContent = "★"; s.title = `Dar nota ${i} (PUT)`;
+    s.onclick = () => darNota(j, i === Number(d.nota) ? 0 : i);
+    stars.appendChild(s);
+  }
+
+  const row = document.createElement("div"); row.className = "row";
+  const st = document.createElement("span"); st.className = "status " + d.status; st.textContent = STATUS_NOME[d.status] || d.status;
+  const acts = document.createElement("div"); acts.className = "acts";
+  const bEd = document.createElement("button"); bEd.textContent = "✏️ Editar"; bEd.onclick = () => abrirForm(j.id);
+  acts.appendChild(bEd);
+  row.append(st, acts);
+
+  corpo.append(h, meta, stars, row);
+  el.append(capa, corpo);
+  return el;
+}
+
+/* ===== Ações ===== */
+function exigirEndpoint() {
+  if (endpoint) return true;
+  toast("Cole o endpoint do CrudCrud primeiro.", "err");
+  $("epInput").focus();
+  return false;
+}
+
+async function carregar() {
+  if (!endpoint) { jogos = []; render(); return; }
+  carregando = true; render();
+  try {
+    const r = await apiListar();
+    jogos = (r || []).map(doServidor).filter((j) => j.data.status);
+    status(`Conectado • ${jogos.length} jogo(s) no endpoint`, "ok");
+  } catch (e) { status(e.message, "bad"); toast(e.message, "err"); }
+  finally { carregando = false; render(); }
+}
+
+// O CrudCrud não tem PATCH: mudanças pequenas também usam PUT com o objeto inteiro.
+async function salvarMudanca(j, novoData, msgOk) {
+  const antigo = j.data;
+  j.data = { ...j.data, ...novoData }; render();
+  try { await apiPut(j.id, paraCorpo(j)); toast(msgOk, "ok"); }
+  catch (e) { j.data = antigo; render(); toast(e.message, "err"); }
+}
+const darNota = (j, nota) => salvarMudanca(j, { nota }, nota ? `Nota ${nota} salva` : "Nota removida");
+const alternarFav = (j) => {
+  const novo = !j.data.favorito;
+  return salvarMudanca(j, { favorito: novo }, novo ? "Adicionado aos favoritos" : "Removido dos favoritos");
+};
+
+/* ===== Modal form ===== */
+const fechar = (id) => $(id).classList.remove("open");
+
+function abrirForm(id) {
+  if (!id && !exigirEndpoint()) return;
+  $("form").reset();
+  $("fId").value = ""; $("fIdBox").hidden = true; $("btnExcluir").hidden = true;
+  $("form").dataset.fav = "";
+  $("mTitulo").textContent = "Adicionar jogo";
+  if (!id) { $("bgForm").classList.add("open"); $("fNome").focus(); return; }
+
+  const j = jogos.find((x) => x.id === id);
+  if (!j) return;
+  $("bgForm").classList.add("open");
+  $("mTitulo").textContent = "Editar jogo";
+  $("btnExcluir").hidden = false;
+  $("fId").value = j.id;
+  $("fIdBox").hidden = false; $("fIdBox").textContent = "ID: " + j.id;
+  $("fNome").value = j.name;
+  const d = j.data;
+  $("fGenero").value = d.genero || "Ação";
+  $("fPlat").value = d.plataforma || "PC";
+  $("fAno").value = d.ano || "";
+  $("fStatus").value = d.status || "quero";
+  $("fNota").value = d.nota || 0;
+  $("form").dataset.fav = d.favorito ? "1" : "";
+}
+
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!exigirEndpoint()) return;
+  const id = $("fId").value;
+  const obj = {
+    name: $("fNome").value.trim(),
+    data: {
+      genero: $("fGenero").value,
+      plataforma: $("fPlat").value,
+      ano: $("fAno").value ? Number($("fAno").value) : null,
+      status: $("fStatus").value,
+      nota: Math.min(5, Math.max(0, Number($("fNota").value) || 0)),
+      favorito: id ? !!$("form").dataset.fav : false,
+    },
+  };
+  $("btnSalvar").disabled = true;
+  try {
+    if (id) {
+      await apiPut(id, obj); // PUT
+      const j = jogos.find((x) => x.id === id);
+      if (j) { j.name = obj.name; j.data = obj.data; }
+      toast("Jogo atualizado (PUT)", "ok");
+    } else {
+      const novo = await apiCriar(obj); // POST
+      jogos.push(doServidor(novo));
+      toast("Jogo adicionado (POST)", "ok");
+    }
+    fechar("bgForm"); render();
+  } catch (err) { toast(err.message, "err"); }
+  finally { $("btnSalvar").disabled = false; }
+});
+
+$("btnExcluir").onclick = async () => {
+  const id = $("fId").value;
+  if (!id || !confirm("Excluir este jogo da coleção?")) return;
+  try {
+    await apiExcluir(id); // DELETE
+    jogos = jogos.filter((j) => j.id !== id);
+    toast("Jogo excluído (DELETE)", "ok");
+    fechar("bgForm"); render();
+  } catch (e) { toast(e.message, "err"); }
+};
+
+/* ===== Endpoint ===== */
+function lerEndpoint(txt) {
+  const m = String(txt).match(/[a-f0-9]{32}/i);
+  return m ? m[0] : "";
+}
+$("epSalvar").onclick = () => {
+  const id = lerEndpoint($("epInput").value);
+  if (!id) { toast("Não achei o endpoint. Cole a URL completa do crudcrud.com.", "err"); return; }
+  endpoint = id; salvarEndpoint();
+  $("epInput").value = RAIZ();
+  carregar();
+};
+$("epInput").addEventListener("keydown", (e) => { if (e.key === "Enter") $("epSalvar").click(); });
+
+/* ===== Eventos ===== */
+$("btnNovo").onclick = () => abrirForm();
+$("btnCancelar").onclick = () => fechar("bgForm");
+$("btnRecarregar").onclick = () => { if (exigirEndpoint()) carregar(); };
+$("busca").addEventListener("input", render);
+$("bgForm").addEventListener("click", (e) => { if (e.target === $("bgForm")) fechar("bgForm"); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") fechar("bgForm"); });
+
+if (endpoint) $("epInput").value = RAIZ();
+renderChips();
+render();
+carregar();
+</script>
+</body>
+</html>
